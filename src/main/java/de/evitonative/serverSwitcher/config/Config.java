@@ -14,7 +14,6 @@ public class Config<T> {
     private final Logger logger;
     private final int configVersion;
 
-    private final Toml toml;
     private final T instance;
 
     public Config(Path dataDirectory, String configName, int configVersion, Class<T> clazz, Logger logger) throws IOException {
@@ -22,8 +21,7 @@ public class Config<T> {
         this.logger = logger;
         this.configVersion = configVersion;
 
-        this.toml = createConfigIfNotExists();
-        this.instance = toml.to(clazz);
+        this.instance = createConfigIfNotExists().to(clazz);
     }
 
     public T getInstance() {

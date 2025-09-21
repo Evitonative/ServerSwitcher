@@ -1,6 +1,12 @@
 # DON'T CHANGE THIS
 config_version = 1
 
+[groups.default]
+friendly_name = "Default"
+
+[groups.group1]
+friendly_name = "Group 1"
+
 [[servers.default]]
 name = "server01"
 friendly_name = "Server"

@@ -32,7 +32,7 @@ public class ServerSwitcher {
 
         // TODO REMOVE
         try {
-            Class levelClass = Class.forName("org.apache.logging.log4j.Level");
+            Class<?> levelClass = Class.forName("org.apache.logging.log4j.Level");
             Method setLevel = Class.forName("org.apache.logging.log4j.core.config.Configurator").getMethod("setLevel", String.class, levelClass);
 
             setLevel.invoke(null, logger.getName(), levelClass.getField("DEBUG").get(null));
