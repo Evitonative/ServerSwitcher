@@ -1,0 +1,18 @@
+# DON'T CHANGE THIS
+config_version = 1
+
+[[servers.default]]
+name = "server01"
+friendly_name = "Server"
+
+[[servers.default]]
+name = "server02"
+friendly_name = "Other Server"
+
+[[servers.group1]]
+name = "server03"
+friendly_name = "Other Server2"
+
+[[servers.group1]]
+name = "server04"
+friendly_name = "Other Server3"
