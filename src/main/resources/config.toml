@@ -24,8 +24,7 @@ serverNameWrapper = "» <green><server></green>"
 # placeholders:
 # <server> - replaced with the friendly server name
 # <default> - uses the result of serverNameWrapper
-#unavailableServerNameWrapper = "» <st><server></st>"
-unavailableServerNameWrapper = "» <server>"
+unavailableServerNameWrapper = "» <st><server></st>"
 
 # serverSeparator between servers
 serverSeparator = "<newline>"
