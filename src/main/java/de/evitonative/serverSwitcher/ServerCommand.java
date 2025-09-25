@@ -10,6 +10,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import de.evitonative.serverSwitcher.config.MainConfig;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -279,6 +280,10 @@ public final class ServerCommand {
         Component serverDisplayName = serverDetails.friendlyName != null
                 ? mm.deserialize(serverDetails.friendlyName)
                 : Component.text(serverInternalName);
+
+        if (serverAvailable) {
+            serverDisplayName = serverDisplayName.clickEvent(ClickEvent.runCommand("/server " + serverInternalName));
+        }
 
         Component displayNameWrappedRegular = mm.deserialize(
                 plugin.config.format.serverNameWrapper,
