@@ -33,11 +33,13 @@ public class MainConfig {
         public String placeholderFallback;
     }
 
-    @SuppressWarnings("CanBeFinal")
     public static final class ServerDetails {
         public String friendlyName;
         public String group;
         public Boolean restricted;
+
+        @SuppressWarnings("unused")
+        public ServerDetails() {}
 
         public ServerDetails(String friendlyName,
                              String group,

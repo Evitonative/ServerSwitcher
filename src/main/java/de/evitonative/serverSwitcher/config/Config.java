@@ -1,6 +1,7 @@
 package de.evitonative.serverSwitcher.config;
 
-import com.moandjiezana.toml.Toml;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.toml.TomlMapper;
 import de.evitonative.serverSwitcher.ServerSwitcher;
 
 import java.io.IOException;
@@ -24,17 +25,19 @@ public class Config {
 
     public void reloadConfig() throws IOException {
         plugin.logger.info("Reloading config...");
-        plugin.config = createConfigIfNotExists().to(MainConfig.class); // todo: make this more flexible (e.g. allow passing a field to this instance)
+        plugin.config = createConfigIfNotExists();
         plugin.config.setConfigHandler(this);
     }
 
-    private Toml createConfigIfNotExists() throws IOException{
+    private MainConfig createConfigIfNotExists() throws IOException{
+        TomlMapper mapper = new TomlMapper();
         if (Files.exists(configPath)) {
-            Toml toml = new Toml().read(configPath.toFile());
 
-            Long file_config_version = toml.getLong("configVersion");
+            JsonNode rootNode = mapper.readTree(configPath.toFile());
 
-            if (file_config_version == null) {
+            int file_config_version = rootNode.path("configVersion").asInt(-1);
+
+            if (file_config_version == -1) {
                 throw new IOException("The config version could not be found.");
             }
 
@@ -52,7 +55,7 @@ public class Config {
 
             }
 
-            return toml;
+            return mapper.treeToValue(rootNode, MainConfig.class);
         }
 
         try (InputStream in = Config.class.getResourceAsStream("/" + configPath.getFileName().toString())) {
@@ -65,6 +68,7 @@ public class Config {
             plugin.logger.debug("Config file {} has been created", configPath.getFileName());
         }
 
-        return new Toml().read(configPath.toFile());
+        JsonNode rootNode = mapper.readTree(configPath.toFile());
+        return mapper.treeToValue(rootNode, MainConfig.class);
     }
 }
