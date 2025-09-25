@@ -30,16 +30,6 @@ public class ServerSwitcher {
         this.proxy = proxy;
         this.logger = logger;
         this.dataDirectory = dataDirectory;
-
-        // TODO REMOVE
-        try {
-            Class<?> levelClass = Class.forName("org.apache.logging.log4j.Level");
-            Method setLevel = Class.forName("org.apache.logging.log4j.core.config.Configurator").getMethod("setLevel", String.class, levelClass);
-
-            setLevel.invoke(null, logger.getName(), levelClass.getField("DEBUG").get(null));
-        } catch (ReflectiveOperationException e) {
-            logger.warn("while changing log level", e);
-        }
     }
 
     @Subscribe
