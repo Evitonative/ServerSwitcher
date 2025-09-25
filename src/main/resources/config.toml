@@ -50,7 +50,7 @@ onlyPlayers = "<red>This (sub-) command can only be used by players"
 placeholderFallback = "?"
 
 # server groups
-# friendly_name (optional): the name to display ingame
+# friendly_name (optional): the name to display in-game
 [groups.default]
 friendlyName = "Ungrouped"
 
@@ -58,19 +58,19 @@ friendlyName = "Ungrouped"
 friendlyName = "Vanilla"
 
 [groups.modded]
-friendlyName = "Moddded"
+friendlyName = "Mod Packs"
 
 [groups.staff]
 friendlyName = "Staff Only"
 restricted = true
 
 # server configuration
-# servers not registed on the proxy will be ignored
-[servers.survial01]
+# servers not registered on the proxy will be ignored
+[servers.survival01]
 friendlyName = "1.20 Survival"
 group = "vanilla"
 
-[servers.survial02]
+[servers.survival02]
 friendlyName = "1.21 Survival Test"
 group = "vanilla"
 restricted = true

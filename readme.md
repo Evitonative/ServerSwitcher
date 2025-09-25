@@ -18,9 +18,9 @@ A Velocity plugin that provides a **permission-based server switching system** f
 | `serverswitcher.group.<group-name>`   | Allows access to all servers in the group `<group-name>` |
 
 
-> ⚠️ Note: This plugin **does not prevent a player from being on a server**; it only controls whether they can switch there themselves. If there are other ways to join a server, they may bypass this restriction. You might also want to prevent access to the Velocity server command by setting `velocity.command.server` to `false`.
+> **⚠️ Note:** This plugin **does not prevent a player from being on a server**; it only controls whether they can switch there themselves. If there are other ways to join a server, they may bypass this restriction. You might also want to prevent access to the Velocity server command by setting `velocity.command.server` to `false`.
 
 ## Config
 See the [config.toml](/src/main/resources/config.toml) file for available options.
 
-> 💡 Tip: If you notice `CR` characters in-game, save it with **LF line terminators** to avoid issues.
+> **💡 Tip:** If you notice `CR` characters in-game, save it with **LF line terminators** to avoid issues.
