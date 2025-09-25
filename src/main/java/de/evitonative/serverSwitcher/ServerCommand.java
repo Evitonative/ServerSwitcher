@@ -5,10 +5,9 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.api.util.ModInfo;
 import de.evitonative.serverSwitcher.config.MainConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -61,13 +60,15 @@ public final class ServerCommand {
             String groupName = Objects.requireNonNullElse(group.getValue().friendlyName, group.getKey());
             Component groupDisplayName = mm.deserialize(groupName);
 
-            boolean restricted = Objects.requireNonNullElse(group.getValue().restricted, false); // todo: permission logic
+            boolean groupDefaultPermission = Objects.requireNonNullElse(group.getValue().restricted, false);
+            Tristate groupPermission = source.getPermissionValue("serverswitcher.group." + group.getKey());
 
-            createGroup(configGroups, group.getKey(), groupDisplayName);
+            createGroup(configGroups, group.getKey(), groupDisplayName, groupDefaultPermission, groupPermission);
         }
 
         if (!configGroups.containsKey("default")) {
-            createGroup(configGroups, "default", Component.text("Default Group"));
+            Tristate groupPerms = source.getPermissionValue("serverswitcher.group.default");
+            createGroup(configGroups, "default", Component.text("Default Group"), false, groupPerms);
         }
 
         // Servers
@@ -109,17 +110,23 @@ public final class ServerCommand {
         // Servers from config
         for (Map.Entry<String, MainConfig.ServerDetails> serverEntry : plugin.config.servers.entrySet()) {
             String serverName = serverEntry.getKey();
+            MainConfig.ServerDetails serverDetails = serverEntry.getValue();
 
             if (registeredServers.containsKey(serverName)) {
                 foundServers.add(serverName);
             }
 
-            PingResult pingResult = resolvedPings.get(serverName);
-
-            Component serverComponent = buildServerComponent(plugin, serverEntry, source, mm, pingResult);
+            // Permissions
             String groupName = Objects.requireNonNullElse(serverEntry.getValue().group, "default");
-            if (configGroups.containsKey(groupName) && serverComponent != null) {
-                configGroups.get(groupName).servers.add(serverComponent);
+            DisplayGroup configGroup = configGroups.get(groupName);
+
+            if (notAllowedOnServer(source, configGroup, serverDetails, serverName)) continue;
+
+            // Component
+            PingResult pingResult = resolvedPings.get(serverName);
+            Component serverComponent = buildServerComponent(plugin, serverEntry, source, mm, pingResult);
+            if (serverComponent != null) {
+                configGroup.servers.add(serverComponent);
             }
         }
 
@@ -132,11 +139,14 @@ public final class ServerCommand {
             String serverName = serverEntry.getKey();
             MainConfig.ServerDetails serverDetails = new MainConfig.ServerDetails(serverEntry.getKey(), "default", false);
 
+            // Permissions
+            DisplayGroup configGroup = configGroups.get("default");
+
+            if (notAllowedOnServer(source, configGroup, serverDetails, serverName)) continue;
+
             PingResult pingResult = resolvedPings.get(serverName);
-
             Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), source, mm, pingResult);
-
-            if (configGroups.containsKey("default") && serverComponent != null) {
+            if (serverComponent != null) {
                 configGroups.get("default").servers.add(serverComponent);
             }
         }
@@ -174,6 +184,20 @@ public final class ServerCommand {
         source.sendMessage(message);
     }
 
+    private static boolean notAllowedOnServer(CommandSource source, DisplayGroup configGroup, MainConfig.ServerDetails serverDetails, String serverName) {
+        boolean groupRestricted = configGroup.groupDefaultPermission;
+        boolean serverRestricted = Objects.requireNonNullElse(serverDetails.restricted, false);
+
+        Tristate groupPermission = configGroup.groupPermission;
+        Tristate serverPermission = source.getPermissionValue("serverswitcher.server." + serverName);
+
+        if (serverPermission != Tristate.UNDEFINED) return !serverPermission.asBoolean();
+        if (groupPermission != Tristate.UNDEFINED) return !groupPermission.asBoolean();
+
+        if (serverRestricted) return true;
+        return groupRestricted;
+    }
+
     private static @Nullable Component buildServerComponent(
             ServerSwitcher plugin,
             Map.Entry<String, MainConfig.ServerDetails> serverEntry,
@@ -183,8 +207,6 @@ public final class ServerCommand {
     ) {
         String serverInternalName = serverEntry.getKey();
         MainConfig.ServerDetails serverDetails = serverEntry.getValue();
-
-        boolean restricted = Objects.requireNonNullElse(serverDetails.restricted, false); // todo: permission logic
 
         boolean serverAvailable = false;
         ServerPing ping;
@@ -287,10 +309,10 @@ public final class ServerCommand {
                 .exceptionally(error -> new PingResult(null, error));
     }
 
-    private static void createGroup(LinkedHashMap<String, DisplayGroup> map, String key, Component prettyName) {
-        map.put(key, new DisplayGroup(prettyName, new ArrayList<>()));
+    private static void createGroup(LinkedHashMap<String, DisplayGroup> map, String key, Component prettyName, boolean groupDefaultPermission, Tristate groupPermission) {
+        map.put(key, new DisplayGroup(prettyName, new ArrayList<>(), groupDefaultPermission, groupPermission));
     }
 
-    private record DisplayGroup(Component displayName, ArrayList<Component> servers) {}
+    private record DisplayGroup(Component displayName, ArrayList<Component> servers, boolean groupDefaultPermission, Tristate groupPermission) {}
     private record PingResult(@Nullable ServerPing ping, @Nullable Throwable error) {}
 }
