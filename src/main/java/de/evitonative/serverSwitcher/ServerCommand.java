@@ -18,11 +18,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public final class ServerCommand {
@@ -78,21 +76,69 @@ public final class ServerCommand {
                 server -> server
         ));
 
+        // Pings
+        Map<String, CompletableFuture<PingResult>> pingFutures = new HashMap<>();
+
+        for (RegisteredServer server : registeredServers.values()) {
+            pingFutures.put(server.getServerInfo().getName(), executePing(server, plugin));
+        }
+
+        CompletableFuture<Void> allPings = CompletableFuture.allOf(pingFutures.values().toArray(new CompletableFuture[0]));
+
+        allPings.whenComplete((v, ex) -> plugin.proxy.getScheduler().buildTask(plugin, () -> {
+            Map<String, PingResult> resolvedPings = new HashMap<>();
+
+            for (Map.Entry<String, CompletableFuture<PingResult>> entry : pingFutures.entrySet()) {
+                resolvedPings.put(entry.getKey(), entry.getValue().join());
+            }
+
+            processServersAndBuildMessage(plugin, source, mm, configGroups, registeredServers, resolvedPings);
+        }).schedule());
+    }
+
+    private static void processServersAndBuildMessage(
+            ServerSwitcher plugin,
+            CommandSource source,
+            MiniMessage mm,
+            LinkedHashMap<String, DisplayGroup> configGroups,
+            Map<String, @NotNull RegisteredServer> registeredServers,
+            Map<String, PingResult> resolvedPings
+    ) {
         Set<String> foundServers = new HashSet<>();
 
         // Servers from config
-        for (Map.Entry<String, MainConfig.ServerDetails> server : plugin.config.servers.entrySet()) {
-            addServer(plugin, server, registeredServers, foundServers, source, configGroups, mm);
+        for (Map.Entry<String, MainConfig.ServerDetails> serverEntry : plugin.config.servers.entrySet()) {
+            String serverName = serverEntry.getKey();
+
+            if (registeredServers.containsKey(serverName)) {
+                foundServers.add(serverName);
+            }
+
+            PingResult pingResult = resolvedPings.get(serverName);
+
+            Component serverComponent = buildServerComponent(plugin, serverEntry, source, mm, pingResult);
+            String groupName = Objects.requireNonNullElse(serverEntry.getValue().group, "default");
+            if (configGroups.containsKey(groupName) && serverComponent != null) {
+                configGroups.get(groupName).servers.add(serverComponent);
+            }
         }
 
+        // Servers missing in config
         registeredServers.entrySet().removeIf(entry -> foundServers.contains(entry.getKey()));
 
-        // Servers missing in config
-        for (Map.Entry<String, @NotNull RegisteredServer> server : registeredServers.entrySet()) {
-            plugin.logger.warn("Server {} missing in config", server.getKey());
-            Map.Entry<String, MainConfig.ServerDetails> serverDetails = new AbstractMap.SimpleEntry<>(server.getKey(), new MainConfig.ServerDetails(server
-                    .getKey(), "default", false));
-            addServer(plugin, serverDetails, registeredServers, null, source, configGroups, mm);
+        for (Map.Entry<String, @NotNull RegisteredServer> serverEntry : registeredServers.entrySet()) {
+            plugin.logger.warn("Server {} missing in config", serverEntry.getKey());
+
+            String serverName = serverEntry.getKey();
+            MainConfig.ServerDetails serverDetails = new MainConfig.ServerDetails(serverEntry.getKey(), "default", false);
+
+            PingResult pingResult = resolvedPings.get(serverName);
+
+            Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), source, mm, pingResult);
+
+            if (configGroups.containsKey("default") && serverComponent != null) {
+                configGroups.get("default").servers.add(serverComponent);
+            }
         }
 
         // message construction
@@ -127,86 +173,85 @@ public final class ServerCommand {
         source.sendMessage(message);
     }
 
-    private static void addServer(ServerSwitcher plugin, Map.Entry<String, MainConfig.ServerDetails> server, Map<String, @NotNull RegisteredServer> registeredServers, @Nullable Set<String> foundServers, CommandSource source, LinkedHashMap<String, DisplayGroup> configGroups, MiniMessage mm) {
-        String serverInternalName = server.getKey();
-        MainConfig.ServerDetails serverDetails = server.getValue();
+    private static @Nullable Component buildServerComponent(
+            ServerSwitcher plugin,
+            Map.Entry<String, MainConfig.ServerDetails> serverEntry,
+            CommandSource source,
+            MiniMessage mm,
+            @Nullable PingResult pingResult
+    ) {
+        String serverInternalName = serverEntry.getKey();
+        MainConfig.ServerDetails serverDetails = serverEntry.getValue();
 
         boolean restricted = Objects.requireNonNullElse(serverDetails.restricted, false); // todo: permission logic
 
-        RegisteredServer registeredServer = registeredServers.get(server.getKey());
-
         boolean serverAvailable = false;
+        ServerPing ping;
 
-        if (registeredServer != null) {
-            if (foundServers != null) {
-                foundServers.add(serverInternalName);
-            }
+        if (pingResult != null) {
+            ping = pingResult.ping;
 
-            if (Objects.requireNonNullElse(plugin.config.disablePing, false)) {
-                serverAvailable = true;
-            } else {
-                try {
-                    ServerPing ping = registeredServer.ping().get(250, TimeUnit.MILLISECONDS);
-                    assert ping != null : "server ping was null"; // todo: make sure this is always true
+            serverAvailable = (ping != null || pingResult.error() == null);
 
-                    serverAvailable = true;
+            if (pingResult.error() != null) {
+                Throwable cause = pingResult.error();
+                while (cause.getCause() != null && (cause instanceof CompletionException || cause instanceof ExecutionException)) {
+                    cause = cause.getCause();
+                }
 
-                    ServerPing.Version serverVersion = ping.getVersion();
+                switch (cause) {
+                    case TimeoutException ignored ->
+                            plugin.logger.warn("Ping to server {} timed out", serverInternalName);
 
-                    Integer currentPlayers;
-                    Integer maxPlayers;
-
-                    if (ping.getPlayers().isPresent()) {
-                        ServerPing.Players players = ping.getPlayers().get();
-                        currentPlayers = players.getOnline();
-                        maxPlayers = players.getMax();
-                    }
-
-
-                    String modLoader;
-                    String playerModLoader;
-                    List<String> missingMods = new ArrayList<>();
-
-                    if (ping.getModinfo().isPresent() && source instanceof Player player) {
-                        ModInfo serverModInfo = ping.getModinfo().get();
-                        modLoader = serverModInfo.getType();
-
-                        Set<ModInfo.Mod> serverModsMissing = new HashSet<>(serverModInfo.getMods());
-
-                        if (player.getModInfo().isPresent()) {
-                            ModInfo playerModInfo = player.getModInfo().get();
-                            playerModLoader = playerModInfo.getType();
-
-                            Set<ModInfo.Mod> playerMods = new HashSet<>(playerModInfo.getMods());
-
-                            Set<ModInfo.Mod> sharedMods = new HashSet<>(serverModsMissing);
-                            sharedMods.retainAll(playerMods);
-                            serverModsMissing.removeAll(playerMods);
+                    case ConnectException er -> {
+                        if (er.getMessage() != null && er.getMessage().contains("Connection refused")) {
+                            plugin.logger.warn("Connection refused to server {} configured in velocity config", serverInternalName);
+                        } else {
+                            plugin.logger.error("Connect Exception during ping to {}: {}", serverInternalName, er.getMessage(), er);
                         }
                     }
-
-                    // todo create config for lore and build it and add to message
-
-
-                } catch (InterruptedException e) {
-                    plugin.logger.error(e.getCause().getMessage(), e);
-                } catch (TimeoutException e) {
-                    plugin.logger.warn("Ping to server {} timed out", serverInternalName);
-                } catch (ExecutionException e) {
-                    if (e.getMessage().contains("Connection refused")) {
-                        plugin.logger.warn("Connection refused to server {} configured in velocity config", serverInternalName);
-                    } else {
-                        plugin.logger.error(e.getCause().getMessage(), e);
-                    }
+                    default -> plugin.logger.error("Unexpected error during ping to {}: {}", serverInternalName, cause.getMessage(), cause);
                 }
             }
         }
 
-        // Check for group
-        String groupInternalName = Objects.requireNonNullElse(serverDetails.group, "default");
-        if (!configGroups.containsKey(groupInternalName)) {
-            createGroup(configGroups, groupInternalName, Component.text(groupInternalName));
-        }
+        /*if (ping != null) {
+            ServerPing.Version serverVersion = ping.getVersion();
+
+            Integer currentPlayers;
+            Integer maxPlayers;
+
+            if (ping.getPlayers().isPresent()) {
+                ServerPing.Players players = ping.getPlayers().get();
+                currentPlayers = players.getOnline();
+                maxPlayers = players.getMax();
+            }
+
+
+            String modLoader;
+            String playerModLoader;
+            List<String> missingMods = new ArrayList<>();
+
+            if (ping.getModinfo().isPresent() && source instanceof Player player) {
+                ModInfo serverModInfo = ping.getModinfo().get();
+                modLoader = serverModInfo.getType();
+
+                Set<ModInfo.Mod> serverModsMissing = new HashSet<>(serverModInfo.getMods());
+
+                if (player.getModInfo().isPresent()) {
+                    ModInfo playerModInfo = player.getModInfo().get();
+                    playerModLoader = playerModInfo.getType();
+
+                    Set<ModInfo.Mod> playerMods = new HashSet<>(playerModInfo.getMods());
+
+                    Set<ModInfo.Mod> sharedMods = new HashSet<>(serverModsMissing);
+                    sharedMods.retainAll(playerMods);
+                    serverModsMissing.removeAll(playerMods);
+                }
+            }
+
+            // todo create config for lore and build it and add to message
+        }*/
 
         Component serverDisplayName = serverDetails.friendlyName != null
                 ? mm.deserialize(serverDetails.friendlyName)
@@ -225,14 +270,26 @@ public final class ServerCommand {
         }
 
         if (serverAvailable || !plugin.config.format.unavailableServerNameWrapper.isEmpty()) {
-            configGroups.get(groupInternalName).servers.add(displayNameWrapped);
+            return displayNameWrapped;
         }
+
+        return null;
+    }
+
+    private static CompletableFuture<PingResult> executePing(RegisteredServer server, ServerSwitcher plugin) {
+        if (Objects.requireNonNullElse(plugin.config.disablePing, false)) {
+            return CompletableFuture.completedFuture(new PingResult(null, null));
+        }
+
+        return server.ping().orTimeout(250, TimeUnit.MILLISECONDS)
+                .thenApply(ping -> new PingResult(ping, null))
+                .exceptionally(error -> new PingResult(null, error));
     }
 
     private static void createGroup(LinkedHashMap<String, DisplayGroup> map, String key, Component prettyName) {
         map.put(key, new DisplayGroup(prettyName, new ArrayList<>()));
     }
 
-    private record DisplayGroup(Component displayName, ArrayList<Component> servers) {
-    }
+    private record DisplayGroup(Component displayName, ArrayList<Component> servers) {}
+    private record PingResult(@Nullable ServerPing ping, @Nullable Throwable error) {}
 }
