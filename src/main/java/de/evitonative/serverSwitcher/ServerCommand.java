@@ -64,7 +64,7 @@ public final class ServerCommand {
                                 MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
                                 Component prettyName = serverDetails != null ? mm.deserialize(serverDetails.friendlyName) : Component.text(internalName);
 
-                                if (!notAllowedOnServer(plugin, source, server, server.getServerInfo().getName())) {
+                                if (allowedOnServer(plugin, source, server, server.getServerInfo().getName())) {
                                     builder.suggest(internalName, VelocityBrigadierMessage.tooltip(prettyName));
                                 }
                             });
@@ -91,7 +91,7 @@ public final class ServerCommand {
 
                             RegisteredServer server = serverOption.get();
 
-                            if (notAllowedOnServer(plugin, source, server, arg)) {
+                            if (!allowedOnServer(plugin, source, server, arg)) {
                                 source.sendMessage(mm.deserialize(plugin.config.format.serverAccessDenied));
                                 return Command.SINGLE_SUCCESS;
                             }
@@ -176,7 +176,7 @@ public final class ServerCommand {
             String groupName = Objects.requireNonNullElse(serverEntry.getValue().group, "default");
             DisplayGroup configGroup = configGroups.get(groupName);
 
-            if (notAllowedOnServer(source, configGroup, serverDetails, serverName)) continue;
+            if (!allowedOnServer(source, configGroup, serverDetails, serverName)) continue;
 
             // Component
             PingResult pingResult = resolvedPings.get(serverName);
@@ -198,7 +198,7 @@ public final class ServerCommand {
             // Permissions
             DisplayGroup configGroup = configGroups.get("default");
 
-            if (notAllowedOnServer(source, configGroup, serverDetails, serverName)) continue;
+            if (!allowedOnServer(source, configGroup, serverDetails, serverName)) continue;
 
             PingResult pingResult = resolvedPings.get(serverName);
             Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), mm, pingResult);
@@ -240,7 +240,7 @@ public final class ServerCommand {
         source.sendMessage(message);
     }
 
-    private static boolean notAllowedOnServer(ServerSwitcher plugin, CommandSource source, RegisteredServer server, String serverName) {
+    private static boolean allowedOnServer(ServerSwitcher plugin, CommandSource source, RegisteredServer server, String serverName) {
         DisplayGroup configGroup;
         MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
         if (serverDetails != null) {
@@ -258,21 +258,21 @@ public final class ServerCommand {
             configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), restricted, source.getPermissionValue("server.group.default"));
         }
 
-        return notAllowedOnServer(source, configGroup, serverDetails, serverName);
+        return allowedOnServer(source, configGroup, serverDetails, serverName);
     }
 
-    private static boolean notAllowedOnServer(CommandSource source, DisplayGroup configGroup, MainConfig.ServerDetails serverDetails, String serverName) {
+    private static boolean allowedOnServer(CommandSource source, DisplayGroup configGroup, MainConfig.ServerDetails serverDetails, String serverName) {
         boolean groupRestricted = configGroup.groupDefaultPermission;
         boolean serverRestricted = Objects.requireNonNullElse(serverDetails.restricted, false);
 
         Tristate groupPermission = configGroup.groupPermission;
         Tristate serverPermission = source.getPermissionValue("serverswitcher.server." + serverName);
 
-        if (serverPermission != Tristate.UNDEFINED) return !serverPermission.asBoolean();
-        if (groupPermission != Tristate.UNDEFINED) return !groupPermission.asBoolean();
+        if (serverPermission != Tristate.UNDEFINED) return serverPermission.asBoolean();
+        if (groupPermission != Tristate.UNDEFINED) return groupPermission.asBoolean();
 
-        if (serverRestricted) return true;
-        return groupRestricted;
+        if (serverRestricted) return false;
+        return !groupRestricted;
     }
 
     private static @Nullable Component buildServerComponent(
@@ -379,7 +379,7 @@ public final class ServerCommand {
             return CompletableFuture.completedFuture(new PingResult(null, null));
         }
 
-        return server.ping().orTimeout(250, TimeUnit.MILLISECONDS)
+        return server.ping().orTimeout(Objects.requireNonNullElse(plugin.config.pingTimeoutMs, 250), TimeUnit.MILLISECONDS)
                 .thenApply(ping -> new PingResult(ping, null))
                 .exceptionally(error -> new PingResult(null, error));
     }
@@ -388,6 +388,6 @@ public final class ServerCommand {
         map.put(key, new DisplayGroup(prettyName, new ArrayList<>(), groupDefaultPermission, groupPermission));
     }
 
-    private record DisplayGroup(Component displayName, ArrayList<Component> servers, boolean groupDefaultPermission, Tristate groupPermission) {}
+    private record DisplayGroup(Component displayName, List<Component> servers, boolean groupDefaultPermission, Tristate groupPermission) {}
     private record PingResult(@Nullable ServerPing ping, @Nullable Throwable error) {}
 }

@@ -6,19 +6,22 @@ import java.util.LinkedHashMap;
 public class MainConfig {
     public int configVersion;
     public Boolean disablePing;
+    public Integer pingTimeoutMs;
     public Format format;
     public LinkedHashMap<String, ServerGroup> groups; // todo: toml4j does not preserve order in the config file, so it should probably be replace with something that does
     public LinkedHashMap<String, ServerDetails> servers;
     private Config configHandler;
 
     public MainConfig(int configVersion,
-                      boolean disablePing,
+                      Boolean disablePing,
+                      Integer pingTimeoutMs,
                       Format format,
                       LinkedHashMap<String, ServerGroup> groups,
                       LinkedHashMap<String, ServerDetails> servers
     ) {
         this.configVersion = configVersion;
         this.disablePing = disablePing;
+        this.pingTimeoutMs = pingTimeoutMs;
         this.format = format;
         this.groups = groups;
         this.servers = servers;

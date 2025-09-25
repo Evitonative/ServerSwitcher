@@ -3,6 +3,8 @@
 
 # DON'T CHANGE THIS
 configVersion = 1
+disablePing = false
+pingTimeoutMs = 250
 
 [format]
 messageHeading = "<bold> >---< <color:#d28aff>Server Selector</color> >---< </bold>"
@@ -12,10 +14,41 @@ messageHeading = "<bold> >---< <color:#d28aff>Server Selector</color> >---< </bo
 # <group> - replaced with the friendly group name
 groupHeading = " >-< <color:#fcd9ff><group></color> >-< "
 
-# used to sourrond the server
+# used to surround the server
 # placeholders:
 # <server> - replaced with the friendly server name
-serverNameHolder = "- <server><newline>"
+serverNameWrapper = "» <green><server></green>"
+
+# same as serverNameWrapper, but used when the server canned be reached
+# when an empty string the server will be excluded from the output
+# placeholders:
+# <server> - replaced with the friendly server name
+# <default> - uses the result of serverNameWrapper
+#unavailableServerNameWrapper = "» <st><server></st>"
+unavailableServerNameWrapper = "» <server>"
+
+# serverSeparator between servers
+serverSeparator = "<newline>"
+
+# text shown when hoverign over an available server
+# placeholders
+# <version> - minecraft version of the server
+# <connected-players> - number of currently connected players
+# <max-players> - maximum number of slots on the serveer
+serverHoverText = """\
+<color:#fcd9ff>Version</color> <version>
+<color:#fcd9ff>Connected Players:</color> <connected-players>/<max-players>
+
+<green><i>Click to connect</i></green>"""
+
+# send to the player when they try to connect to a server that does not exist, or they are not allowed onto
+serverAccessDenied = "<red>The requested server is not available or you are not permitted to access it.</red>"
+
+# for commands only usable by players
+onlyPlayers = "<red>This (sub-) command can only be used by players"
+
+# when a placeholder can't be resolved, this will be used instead
+placeholderFallback = "?"
 
 # server groups
 # friendly_name (optional): the name to display ingame
