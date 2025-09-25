@@ -147,16 +147,17 @@ public final class ServerCommand {
         for (Map.Entry<String, DisplayGroup> group : configGroups.entrySet()) {
             DisplayGroup v = group.getValue();
 
+            if (v.servers.isEmpty()) {
+                continue;
+            }
+
             Component name = v.displayName;
 
             message = message
                     .append(Component.newline())
                     .append(Component.newline())
-                    .append(mm.deserialize(plugin.config.format.groupHeading, Placeholder.component("group", name)));
-
-            if (!v.servers.isEmpty()) {
-                message = message.append(Component.newline());
-            }
+                    .append(mm.deserialize(plugin.config.format.groupHeading, Placeholder.component("group", name)))
+                    .append(Component.newline());
 
             int numberOfServers = v.servers.size();
             for (Component server : v.servers) {
