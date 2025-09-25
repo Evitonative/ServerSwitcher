@@ -39,6 +39,8 @@ public class MainConfig {
         public String unavailableServerNameWrapper;
         public String serverSeparator;
         public String serverHoverText;
+        public String serverAccessDenied;
+        public String onlyPlayers;
         public String placeholderFallback;
 
         public Format(String messageHeading,
@@ -47,6 +49,8 @@ public class MainConfig {
                       String unavailableServerNameWrapper,
                       String serverSeparator,
                       String serverHoverText,
+                      String serverAccessDenied,
+                      String onlyPlayers,
                       String placeholderFallback
         ) {
             this.messageHeading = messageHeading;
@@ -55,6 +59,8 @@ public class MainConfig {
             this.unavailableServerNameWrapper = unavailableServerNameWrapper;
             this.serverSeparator = serverSeparator;
             this.serverHoverText = serverHoverText;
+            this.serverAccessDenied = serverAccessDenied;
+            this.onlyPlayers = onlyPlayers;
             this.placeholderFallback = placeholderFallback;
         }
     }

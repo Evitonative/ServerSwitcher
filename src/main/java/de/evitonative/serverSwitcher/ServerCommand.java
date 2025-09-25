@@ -1,11 +1,14 @@
 package de.evitonative.serverSwitcher;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.permission.Tristate;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import de.evitonative.serverSwitcher.config.MainConfig;
@@ -32,6 +35,8 @@ public final class ServerCommand {
                     plugin.proxy.getScheduler().buildTask(plugin, () -> commandRoot(context, plugin)).schedule();
                     return Command.SINGLE_SUCCESS;
                 })
+
+                // /server reload
                 .then(BrigadierCommand.literalArgumentBuilder("reload")
                         .requires(source -> Permissions.resolve(source, Permissions.RELOAD))
                         .executes(context -> {
@@ -44,6 +49,55 @@ public final class ServerCommand {
                                 return Command.SINGLE_SUCCESS;
                             }
                             source.sendMessage(Component.text("Config reloaded successfully!").color(NamedTextColor.GREEN));
+                            return Command.SINGLE_SUCCESS;
+                        })
+                )
+
+                // /server <server-name>
+                .then(BrigadierCommand.requiredArgumentBuilder("server-name", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            CommandSource source = ctx.getSource();
+                            MiniMessage mm = MiniMessage.miniMessage();
+
+                            plugin.proxy.getAllServers().forEach(server -> {
+                                String internalName = server.getServerInfo().getName();
+                                MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
+                                Component prettyName = serverDetails != null ? mm.deserialize(serverDetails.friendlyName) : Component.text(internalName);
+
+                                if (!notAllowedOnServer(plugin, source, server, server.getServerInfo().getName())) {
+                                    builder.suggest(internalName, VelocityBrigadierMessage.tooltip(prettyName));
+                                }
+                            });
+
+                            return builder.buildFuture();
+                        })
+                        .executes(context -> {
+                            CommandSource source = context.getSource();
+                            String arg = context.getArgument("server-name", String.class);
+
+                            MiniMessage mm = MiniMessage.miniMessage();
+
+                            if (!(source instanceof Player player)) {
+                                source.sendMessage(mm.deserialize(plugin.config.format.onlyPlayers));
+                                return Command.SINGLE_SUCCESS;
+                            }
+
+                            Optional<RegisteredServer> serverOption = plugin.proxy.getServer(arg);
+
+                            if (serverOption.isEmpty()) {
+                                source.sendMessage(mm.deserialize(plugin.config.format.serverAccessDenied));
+                                return Command.SINGLE_SUCCESS;
+                            }
+
+                            RegisteredServer server = serverOption.get();
+
+                            if (notAllowedOnServer(plugin, source, server, arg)) {
+                                source.sendMessage(mm.deserialize(plugin.config.format.serverAccessDenied));
+                                return Command.SINGLE_SUCCESS;
+                            }
+
+                            player.createConnectionRequest(server).fireAndForget();
+
                             return Command.SINGLE_SUCCESS;
                         })
                 )
@@ -184,6 +238,27 @@ public final class ServerCommand {
         }
 
         source.sendMessage(message);
+    }
+
+    private static boolean notAllowedOnServer(ServerSwitcher plugin, CommandSource source, RegisteredServer server, String serverName) {
+        DisplayGroup configGroup;
+        MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
+        if (serverDetails != null) {
+            MainConfig.ServerGroup group = plugin.config.groups.get(serverDetails.group);
+            if (group != null) {
+                configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), group.restricted, source.getPermissionValue("server.group." + serverDetails.group));
+            } else {
+                configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), false, source.getPermissionValue("server.group." + serverDetails.group));
+            }
+        } else {
+            serverDetails = new MainConfig.ServerDetails("", "default", false);
+
+            MainConfig.ServerGroup group = plugin.config.groups.get("default");
+            boolean restricted = group.restricted != null ? group.restricted : false;
+            configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), restricted, source.getPermissionValue("server.group.default"));
+        }
+
+        return notAllowedOnServer(source, configGroup, serverDetails, serverName);
     }
 
     private static boolean notAllowedOnServer(CommandSource source, DisplayGroup configGroup, MainConfig.ServerDetails serverDetails, String serverName) {
