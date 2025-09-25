@@ -14,7 +14,6 @@ import de.evitonative.serverSwitcher.config.MainConfig;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 
 @Plugin(id = "serverswitcher", name = "ServerSwitcher", version = BuildConstants.VERSION, authors = {"Evitonative"})
