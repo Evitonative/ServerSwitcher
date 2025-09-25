@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Path;
 
-@Plugin(id = "serverswitcher", name = "ServerSwitcher", version = BuildConstants.VERSION, authors = {"Evitonative"})
+@Plugin(id = "serverswitcher", name = "ServerSwitcher", version = BuildConstants.VERSION, authors = {"Evitonative"}, description = "velocity plugin that provides a permission-based server switching system ")
 public class ServerSwitcher {
 
     public final ProxyServer proxy;
