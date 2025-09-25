@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import de.evitonative.serverSwitcher.config.MainConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -125,7 +126,7 @@ public final class ServerCommand {
 
             // Component
             PingResult pingResult = resolvedPings.get(serverName);
-            Component serverComponent = buildServerComponent(plugin, serverEntry, source, mm, pingResult);
+            Component serverComponent = buildServerComponent(plugin, serverEntry, mm, pingResult);
             if (serverComponent != null) {
                 configGroup.servers.add(serverComponent);
             }
@@ -146,7 +147,7 @@ public final class ServerCommand {
             if (notAllowedOnServer(source, configGroup, serverDetails, serverName)) continue;
 
             PingResult pingResult = resolvedPings.get(serverName);
-            Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), source, mm, pingResult);
+            Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), mm, pingResult);
             if (serverComponent != null) {
                 configGroups.get("default").servers.add(serverComponent);
             }
@@ -202,7 +203,6 @@ public final class ServerCommand {
     private static @Nullable Component buildServerComponent(
             ServerSwitcher plugin,
             Map.Entry<String, MainConfig.ServerDetails> serverEntry,
-            CommandSource source,
             MiniMessage mm,
             @Nullable PingResult pingResult
     ) {
@@ -210,7 +210,7 @@ public final class ServerCommand {
         MainConfig.ServerDetails serverDetails = serverEntry.getValue();
 
         boolean serverAvailable = false;
-        ServerPing ping;
+        ServerPing ping = null;
 
         if (pingResult != null) {
             ping = pingResult.ping;
@@ -239,11 +239,12 @@ public final class ServerCommand {
             }
         }
 
-        /*if (ping != null) {
+        HoverEvent<Component> hoverText = null;
+        if (ping != null) {
             ServerPing.Version serverVersion = ping.getVersion();
 
-            Integer currentPlayers;
-            Integer maxPlayers;
+            Integer currentPlayers = null;
+            Integer maxPlayers = null;
 
             if (ping.getPlayers().isPresent()) {
                 ServerPing.Players players = ping.getPlayers().get();
@@ -251,31 +252,21 @@ public final class ServerCommand {
                 maxPlayers = players.getMax();
             }
 
+            Component content = mm.deserialize(plugin.config.format.serverHoverText,
+                    Placeholder.parsed(
+                            "version",
+                            serverVersion.getName()
+                    ),
+                    Placeholder.parsed(
+                            "connected-players",
+                            currentPlayers != null ? currentPlayers.toString() : plugin.config.format.placeholderFallback),
+                    Placeholder.parsed(
+                            "max-players",
+                            maxPlayers != null ? maxPlayers.toString() : plugin.config.format.placeholderFallback)
+            );
 
-            String modLoader;
-            String playerModLoader;
-            List<String> missingMods = new ArrayList<>();
-
-            if (ping.getModinfo().isPresent() && source instanceof Player player) {
-                ModInfo serverModInfo = ping.getModinfo().get();
-                modLoader = serverModInfo.getType();
-
-                Set<ModInfo.Mod> serverModsMissing = new HashSet<>(serverModInfo.getMods());
-
-                if (player.getModInfo().isPresent()) {
-                    ModInfo playerModInfo = player.getModInfo().get();
-                    playerModLoader = playerModInfo.getType();
-
-                    Set<ModInfo.Mod> playerMods = new HashSet<>(playerModInfo.getMods());
-
-                    Set<ModInfo.Mod> sharedMods = new HashSet<>(serverModsMissing);
-                    sharedMods.retainAll(playerMods);
-                    serverModsMissing.removeAll(playerMods);
-                }
-            }
-
-            // todo create config for lore and build it and add to message
-        }*/
+            hoverText = HoverEvent.showText(content);
+        }
 
         Component serverDisplayName = serverDetails.friendlyName != null
                 ? mm.deserialize(serverDetails.friendlyName)
@@ -283,6 +274,10 @@ public final class ServerCommand {
 
         if (serverAvailable) {
             serverDisplayName = serverDisplayName.clickEvent(ClickEvent.runCommand("/server " + serverInternalName));
+
+            if (hoverText != null) {
+                serverDisplayName = serverDisplayName.hoverEvent(hoverText);
+            }
         }
 
         Component displayNameWrappedRegular = mm.deserialize(

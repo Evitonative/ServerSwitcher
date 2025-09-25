@@ -11,7 +11,12 @@ public class MainConfig {
     public LinkedHashMap<String, ServerDetails> servers;
     private Config configHandler;
 
-    public MainConfig(int configVersion, boolean disablePing, Format format, LinkedHashMap<String, ServerGroup> groups, LinkedHashMap<String, ServerDetails> servers) {
+    public MainConfig(int configVersion,
+                      boolean disablePing,
+                      Format format,
+                      LinkedHashMap<String, ServerGroup> groups,
+                      LinkedHashMap<String, ServerDetails> servers
+    ) {
         this.configVersion = configVersion;
         this.disablePing = disablePing;
         this.format = format;
@@ -33,13 +38,24 @@ public class MainConfig {
         public String serverNameWrapper;
         public String unavailableServerNameWrapper;
         public String serverSeparator;
+        public String serverHoverText;
+        public String placeholderFallback;
 
-        public Format(String messageHeading, String groupHeading, String serverNameWrapper, String unavailableServerNameWrapper, String serverSeparator) {
+        public Format(String messageHeading,
+                      String groupHeading,
+                      String serverNameWrapper,
+                      String unavailableServerNameWrapper,
+                      String serverSeparator,
+                      String serverHoverText,
+                      String placeholderFallback
+        ) {
             this.messageHeading = messageHeading;
             this.groupHeading = groupHeading;
             this.serverNameWrapper = serverNameWrapper;
             this.unavailableServerNameWrapper = unavailableServerNameWrapper;
             this.serverSeparator = serverSeparator;
+            this.serverHoverText = serverHoverText;
+            this.placeholderFallback = placeholderFallback;
         }
     }
 
@@ -48,7 +64,10 @@ public class MainConfig {
         public String group;
         public Boolean restricted;
 
-        public ServerDetails(String friendlyName, String group, Boolean restricted) {
+        public ServerDetails(String friendlyName,
+                             String group,
+                             Boolean restricted
+        ) {
             this.friendlyName = friendlyName;
             this.group = group;
             this.restricted = restricted;
@@ -59,7 +78,10 @@ public class MainConfig {
         public String friendlyName;
         public Boolean restricted;
 
-        public ServerGroup(String friendlyName, Boolean restricted) {
+        public ServerGroup(
+                String friendlyName,
+                Boolean restricted
+        ) {
             this.friendlyName = friendlyName;
             this.restricted = restricted;
         }
