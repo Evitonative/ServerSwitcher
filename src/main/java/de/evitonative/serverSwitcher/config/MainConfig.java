@@ -1,68 +1,67 @@
 package de.evitonative.serverSwitcher.config;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.LinkedHashMap;
 
-public class MainConfig extends MinimalConfig{
-    private Map<String, List<ServerDetails>> servers;
-    private Map<String, ServerGroup> serverGroups;
+public class MainConfig {
+    public int configVersion;
+    public Boolean disablePing;
+    public Format format;
+    public LinkedHashMap<String, ServerGroup> groups; // todo: toml4j does not preserve order in the config file, so it should probably be replace with something that does
+    public LinkedHashMap<String, ServerDetails> servers;
+    private Config configHandler;
 
-    public MainConfig(int configVersion) {
-        super(configVersion);
-    }
-
-    public MainConfig(int configVersion, Map<String, List<ServerDetails>> servers) {
-        super(configVersion);
+    public MainConfig(int configVersion, boolean disablePing, Format format, LinkedHashMap<String, ServerGroup> groups, LinkedHashMap<String, ServerDetails> servers) {
+        this.configVersion = configVersion;
+        this.disablePing = disablePing;
+        this.format = format;
+        this.groups = groups;
         this.servers = servers;
     }
 
-    public Map<String, List<ServerDetails>> getServers() {
-        return servers;
+    public void setConfigHandler(Config config) {
+        this.configHandler = config;
     }
 
-    public void setServers(Map<String, List<ServerDetails>> servers) {
-        this.servers = servers;
+    public void reloadConfig() throws IOException {
+        configHandler.reloadConfig();
+    }
+
+    public static final class Format {
+        public String messageHeading;
+        public String groupHeading;
+        public String serverNameWrapper;
+        public String unavailableServerNameWrapper;
+        public String serverSeparator;
+
+        public Format(String messageHeading, String groupHeading, String serverNameWrapper, String unavailableServerNameWrapper, String serverSeparator) {
+            this.messageHeading = messageHeading;
+            this.groupHeading = groupHeading;
+            this.serverNameWrapper = serverNameWrapper;
+            this.unavailableServerNameWrapper = unavailableServerNameWrapper;
+            this.serverSeparator = serverSeparator;
+        }
     }
 
     public static final class ServerDetails {
-        private String name;
-        private String friendlyName;
+        public String friendlyName;
+        public String group;
+        public Boolean restricted;
 
-        private ServerDetails(String name, String friendlyName) {
-            this.name = name;
+        public ServerDetails(String friendlyName, String group, Boolean restricted) {
             this.friendlyName = friendlyName;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getFriendlyName() {
-            return friendlyName;
-        }
-
-        public void setFriendlyName(String friendlyName) {
-            this.friendlyName = friendlyName;
+            this.group = group;
+            this.restricted = restricted;
         }
     }
 
     public static class ServerGroup {
-        private String friendly_name;
+        public String friendlyName;
+        public Boolean restricted;
 
-        public ServerGroup(String friendly_name) {
-            this.friendly_name = friendly_name;
-        }
-
-        public String getFriendly_name() {
-            return friendly_name;
-        }
-
-        public void setFriendly_name(String friendly_name) {
-            this.friendly_name = friendly_name;
+        public ServerGroup(String friendlyName, Boolean restricted) {
+            this.friendlyName = friendlyName;
+            this.restricted = restricted;
         }
     }
 }

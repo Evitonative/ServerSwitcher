@@ -20,9 +20,10 @@ import java.nio.file.Path;
 @Plugin(id = "serverswitcher", name = "ServerSwitcher", version = BuildConstants.VERSION, authors = {"Evitonative"})
 public class ServerSwitcher {
 
-    private final ProxyServer proxy;
-    private final Logger logger;
-    private final Path dataDirectory;
+    public final ProxyServer proxy;
+    public final Logger logger;
+    public final Path dataDirectory;
+    public MainConfig config;
 
     @Inject
     public ServerSwitcher(final ProxyServer proxy, final Logger logger, final @DataDirectory Path dataDirectory) {
@@ -43,7 +44,7 @@ public class ServerSwitcher {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) throws IOException {
-        MainConfig config = new Config<>(dataDirectory, "config.toml", 1, MainConfig.class, logger).getInstance();
+        new Config(this, "config.toml", 1);
 
         CommandManager commandManager = proxy.getCommandManager();
 
@@ -52,7 +53,7 @@ public class ServerSwitcher {
                 .plugin(this)
                 .build();
 
-        BrigadierCommand serverCommand = ServerCommand.createServerCommand(proxy, logger);
+        BrigadierCommand serverCommand = ServerCommand.createServerCommand(this);
 
         commandManager.register(serverCommandMeta, serverCommand);
     }

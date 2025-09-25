@@ -4,7 +4,8 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 
 public enum Permissions {
-    SERVERS_LIST("serverswitcher.list", true);
+    SERVERS_LIST("serverswitcher.list", true),
+    RELOAD("serverswitcher.reload", false),;
 
     private final String node;
     private final boolean defaultValue;
@@ -27,3 +28,5 @@ public enum Permissions {
         return value == Tristate.UNDEFINED ? permissions.getDefaultValue() : value.asBoolean();
     }
 }
+
+

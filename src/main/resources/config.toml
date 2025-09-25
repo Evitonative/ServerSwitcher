@@ -1,24 +1,52 @@
+# Server Switcher Configuration
+# all friendly names and everything under format supports minimessage
+
 # DON'T CHANGE THIS
-config_version = 1
+configVersion = 1
 
+[format]
+messageHeading = "<bold> >---< <color:#d28aff>Server Selector</color> >---< </bold>"
+
+# heading used for groups of servers
+# placeholders:
+# <group> - replaced with the friendly group name
+groupHeading = " >-< <color:#fcd9ff><group></color> >-< "
+
+# used to sourrond the server
+# placeholders:
+# <server> - replaced with the friendly server name
+serverNameHolder = "- <server><newline>"
+
+# server groups
+# friendly_name (optional): the name to display ingame
 [groups.default]
-friendly_name = "Default"
+friendlyName = "Ungrouped"
 
-[groups.group1]
-friendly_name = "Group 1"
+[groups.vanilla]
+friendlyName = "Vanilla"
 
-[[servers.default]]
-name = "server01"
-friendly_name = "Server"
+[groups.modded]
+friendlyName = "Moddded"
 
-[[servers.default]]
-name = "server02"
-friendly_name = "Other Server"
+[groups.staff]
+friendlyName = "Staff Only"
+restricted = true
 
-[[servers.group1]]
-name = "server03"
-friendly_name = "Other Server2"
+# server configuration
+# servers not registed on the proxy will be ignored
+[servers.survial01]
+friendlyName = "1.20 Survival"
+group = "vanilla"
 
-[[servers.group1]]
-name = "server04"
-friendly_name = "Other Server3"
+[servers.survial02]
+friendlyName = "1.21 Survival Test"
+group = "vanilla"
+restricted = true
+
+[servers.create01]
+friendlyName = "Create Modpack"
+group = "modded"
+
+[servers.staff01]
+friendlyName = "Staff Survival"
+group = "staff"
