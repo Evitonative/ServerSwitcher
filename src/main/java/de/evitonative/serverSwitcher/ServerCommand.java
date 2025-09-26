@@ -263,7 +263,7 @@ public final class ServerCommand {
 
     private static boolean allowedOnServer(CommandSource source, DisplayGroup configGroup, MainConfig.ServerDetails serverDetails, String serverName) {
         boolean groupRestricted = configGroup.groupDefaultPermission;
-        boolean serverRestricted = Objects.requireNonNullElse(serverDetails.restricted, false);
+        Boolean serverRestricted = serverDetails.restricted;
 
         Tristate groupPermission = configGroup.groupPermission;
         Tristate serverPermission = source.getPermissionValue("serverswitcher.server." + serverName);
@@ -271,7 +271,7 @@ public final class ServerCommand {
         if (serverPermission != Tristate.UNDEFINED) return serverPermission.asBoolean();
         if (groupPermission != Tristate.UNDEFINED) return groupPermission.asBoolean();
 
-        if (serverRestricted) return false;
+        if (serverRestricted != null) return !serverRestricted;
         return !groupRestricted;
     }
 
