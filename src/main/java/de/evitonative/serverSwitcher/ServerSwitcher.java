@@ -9,7 +9,7 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import de.evitonative.serverSwitcher.config.Config;
+import de.evitonative.serverSwitcher.config.ConfigHandler;
 import de.evitonative.serverSwitcher.config.MainConfig;
 import org.slf4j.Logger;
 
@@ -33,7 +33,7 @@ public class ServerSwitcher {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) throws IOException {
-        new Config(this, "config.toml", 1);
+        new ConfigHandler(this, "config.toml", 1);
 
         CommandManager commandManager = proxy.getCommandManager();
 

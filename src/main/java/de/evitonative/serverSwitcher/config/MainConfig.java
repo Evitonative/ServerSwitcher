@@ -1,5 +1,10 @@
 package de.evitonative.serverSwitcher.config;
 
+import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.electronwill.nightconfig.core.conversion.ObjectConverter;
+import com.electronwill.nightconfig.core.conversion.Path;
+
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
@@ -9,12 +14,34 @@ public class MainConfig {
     public Boolean disablePing;
     public Integer pingTimeoutMs;
     public Format format;
-    public LinkedHashMap<String, ServerGroup> groups; // todo: toml4j does not preserve order in the config file, so it should probably be replace with something that does
-    public LinkedHashMap<String, ServerDetails> servers;
-    private Config configHandler;
 
-    public void setConfigHandler(Config config) {
-        this.configHandler = config;
+    @SuppressWarnings("unused")
+    @Path("groups")
+    private Config groupsConfig;
+
+    @SuppressWarnings("unused")
+    @Path("servers")
+    private Config serversConfig;
+
+    public transient LinkedHashMap<String, ServerGroup> groups;
+    public transient LinkedHashMap<String, ServerDetails> servers;
+
+    private ConfigHandler configHandler;
+
+    public MainConfig() {
+        this.groups = new LinkedHashMap<>();
+        this.servers = new LinkedHashMap<>();
+    }
+
+    public void setup(ConfigHandler configHandler) {
+        ObjectConverter converter = new ObjectConverter();
+        if (groupsConfig != null)
+            groupsConfig.valueMap().forEach((k, v) -> groups.put(k, converter.toObject((UnmodifiableConfig) v, ServerGroup::new)));
+
+        if (serversConfig != null)
+            serversConfig.valueMap().forEach((k, v) -> servers.put(k, converter.toObject((UnmodifiableConfig) v, ServerDetails::new)));
+
+        this.configHandler = configHandler;
     }
 
     public void reloadConfig() throws IOException {
@@ -39,7 +66,8 @@ public class MainConfig {
         public Boolean restricted;
 
         @SuppressWarnings("unused")
-        public ServerDetails() {}
+        public ServerDetails() {
+        }
 
         public ServerDetails(String friendlyName,
                              String group,
