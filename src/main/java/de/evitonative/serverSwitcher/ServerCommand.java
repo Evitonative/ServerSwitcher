@@ -162,6 +162,13 @@ public final class ServerCommand {
             Map<String, PingResult> resolvedPings
     ) {
         Set<String> foundServers = new HashSet<>();
+        String currentServer = "";
+
+        if (source instanceof Player player) {
+            if (player.getCurrentServer().isPresent()) {
+                currentServer = player.getCurrentServer().get().getServerInfo().getName();
+            }
+        }
 
         // Servers from config
         for (Map.Entry<String, MainConfig.ServerDetails> serverEntry : plugin.config.servers.entrySet()) {
@@ -180,7 +187,7 @@ public final class ServerCommand {
 
             // Component
             PingResult pingResult = resolvedPings.get(serverName);
-            Component serverComponent = buildServerComponent(plugin, serverEntry, mm, pingResult);
+            Component serverComponent = buildServerComponent(plugin, serverEntry, mm, pingResult, currentServer);
             if (serverComponent != null) {
                 configGroup.servers.add(serverComponent);
             }
@@ -201,14 +208,16 @@ public final class ServerCommand {
             if (!allowedOnServer(source, configGroup, serverDetails, serverName)) continue;
 
             PingResult pingResult = resolvedPings.get(serverName);
-            Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), mm, pingResult);
+            Component serverComponent = buildServerComponent(plugin, new AbstractMap.SimpleEntry<>(serverName, serverDetails), mm, pingResult, currentServer);
             if (serverComponent != null) {
                 configGroups.get("default").servers.add(serverComponent);
             }
         }
 
         // message construction
-        Component message = Component.empty().append(mm.deserialize(plugin.config.format.messageHeading));
+        Component messageHeading = mm.deserialize(plugin.config.format.messageHeading);
+
+        Component message = Component.empty().append(messageHeading);
 
         for (Map.Entry<String, DisplayGroup> group : configGroups.entrySet()) {
             DisplayGroup v = group.getValue();
@@ -279,7 +288,8 @@ public final class ServerCommand {
             ServerSwitcher plugin,
             Map.Entry<String, MainConfig.ServerDetails> serverEntry,
             MiniMessage mm,
-            @Nullable PingResult pingResult
+            @Nullable PingResult pingResult,
+            String currentServerName
     ) {
         String serverInternalName = serverEntry.getKey();
         MainConfig.ServerDetails serverDetails = serverEntry.getValue();
@@ -346,6 +356,10 @@ public final class ServerCommand {
         Component serverDisplayName = serverDetails.friendlyName != null
                 ? mm.deserialize(serverDetails.friendlyName)
                 : Component.text(serverInternalName);
+
+        if (serverInternalName.equals(currentServerName)) {
+            serverDisplayName = mm.deserialize(plugin.config.format.currentServer, Placeholder.component("server", serverDisplayName));
+        }
 
         if (serverAvailable) {
             serverDisplayName = serverDisplayName.clickEvent(ClickEvent.runCommand("/server " + serverInternalName));

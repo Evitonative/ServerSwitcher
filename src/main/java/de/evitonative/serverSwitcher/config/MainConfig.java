@@ -51,6 +51,7 @@ public class MainConfig {
     public static final class Format {
         public String messageHeading;
         public String groupHeading;
+        public String currentServer;
         public String serverNameWrapper;
         public String unavailableServerNameWrapper;
         public String serverSeparator;

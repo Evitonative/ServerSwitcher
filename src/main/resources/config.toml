@@ -35,6 +35,13 @@ serverNameWrapper = "» <green><server></green>"
 # <default> - the result of serverNameWrapper
 unavailableServerNameWrapper = "» <st><server></st>"
 
+# wrapps the server the player is currently on
+# this is applied before the serverNameWrapper
+# placeholders:
+# <server> - name of server
+currentServer = "<u><server></u> "
+
+
 # separator between servers
 # use `<newline>` for each server to be on its own line
 serverSeparator = "<newline>"
