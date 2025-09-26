@@ -1,6 +1,12 @@
 # Server Switcher
 A Velocity plugin that provides a **permission-based server switching system** for your Minecraft network.
 
+## Features
+- Fully configurable formatted server list
+- Grouping of servers
+- Detection of online state of the server
+- Permissions to control which servers players can access and see in the server list
+
 ## Commands
 - `/server` - Lists all servers the player has access to
 - `/server <server-name>` - Switches the player to the selected server
