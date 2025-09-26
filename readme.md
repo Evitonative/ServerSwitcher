@@ -20,8 +20,8 @@ A Velocity plugin that provides a **permission-based server switching system** f
 |---------------------------------------|----------------------------------------------------------|
 | `serverswitcher.list`                 | Access to the `/server` command                          |
 | `serverswitcher.reload`               | Access to `/server reload`                               |
-| `serverswitcher.server.<server-name>` | Allows access to the server `<server-name>`              |
-| `serverswitcher.group.<group-name>`   | Allows access to all servers in the group `<group-name>` |
+| `serverswitcher.server.<server-id>`   | Allows access to the server `<server-id>`                |
+| `serverswitcher.group.<group-id>`     | Allows access to all servers in the group `<group-id>`   |
 
 
 > **⚠️ Note:** This plugin **does not prevent a player from being on a server**; it only controls whether they can switch there themselves. If there are other ways to join a server, they may bypass this restriction. You might also want to prevent access to the Velocity server command by setting `velocity.command.server` to `false`.
