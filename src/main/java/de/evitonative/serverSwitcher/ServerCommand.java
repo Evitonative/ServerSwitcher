@@ -246,7 +246,7 @@ public final class ServerCommand {
         if (serverDetails != null) {
             MainConfig.ServerGroup group = plugin.config.groups.get(serverDetails.group);
             if (group != null) {
-                configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), group.restricted, source.getPermissionValue("server.group." + serverDetails.group));
+                configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), Objects.requireNonNullElse(group.restricted, false), source.getPermissionValue("server.group." + serverDetails.group));
             } else {
                 configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), false, source.getPermissionValue("server.group." + serverDetails.group));
             }
