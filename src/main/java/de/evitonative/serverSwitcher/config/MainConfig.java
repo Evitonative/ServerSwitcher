@@ -10,9 +10,10 @@ import java.util.LinkedHashMap;
 
 public class MainConfig {
     @SuppressWarnings("unused")
-    public int configVersion;
+    public double configVersion;
     public Boolean disablePing;
     public Integer pingTimeoutMs;
+    public Boolean disablePingWarnings;
     public Format format;
 
     @SuppressWarnings("unused")

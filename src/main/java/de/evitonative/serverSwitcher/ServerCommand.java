@@ -20,6 +20,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -308,18 +309,20 @@ public final class ServerCommand {
                     cause = cause.getCause();
                 }
 
+                Level pingLogLevelWarn = plugin.config.disablePingWarnings ? Level.DEBUG : Level.WARN;
+                Level pingLogLevelError = plugin.config.disablePingWarnings ? Level.DEBUG : Level.ERROR;
                 switch (cause) {
                     case TimeoutException ignored ->
-                            plugin.logger.warn("Ping to server {} timed out", serverInternalName);
+                            plugin.logger.atLevel(pingLogLevelWarn).log("Ping to server {} timed out", serverInternalName);
 
                     case ConnectException er -> {
                         if (er.getMessage() != null && er.getMessage().contains("Connection refused")) {
-                            plugin.logger.warn("Connection refused to server {} configured in velocity config", serverInternalName);
+                            plugin.logger.atLevel(pingLogLevelWarn).log("Connection refused to server {} configured in velocity config", serverInternalName);
                         } else {
-                            plugin.logger.error("Connect Exception during ping to {}: {}", serverInternalName, er.getMessage(), er);
+                            plugin.logger.atLevel(pingLogLevelError).log("Connect Exception during ping to {}: {}", serverInternalName, er.getMessage(), er);
                         }
                     }
-                    default -> plugin.logger.error("Unexpected error during ping to {}: {}", serverInternalName, cause.getMessage(), cause);
+                    default -> plugin.logger.atLevel(pingLogLevelError).log("Unexpected error during ping to {}: {}", serverInternalName, cause.getMessage(), cause);
                 }
             }
         }

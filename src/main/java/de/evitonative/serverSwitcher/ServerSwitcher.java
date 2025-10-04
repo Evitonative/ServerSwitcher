@@ -33,7 +33,7 @@ public class ServerSwitcher {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) throws IOException {
-        new ConfigHandler(this, "config.toml", 1);
+        new ConfigHandler(this, "config.toml", 2);
 
         CommandManager commandManager = proxy.getCommandManager();
 

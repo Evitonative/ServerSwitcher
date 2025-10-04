@@ -4,7 +4,7 @@
 
 # config version
 # DON'T CHANGE THIS
-configVersion = 1
+configVersion = 2
 
 # disable pinging the server to see if they are online
 # all servers defined in the `velocity.toml` are assumed to be online
@@ -14,113 +14,120 @@ disablePing = false
 # how long to wait until server pings timeout
 pingTimeoutMs = 250
 
+# disables ping fail warnings
+# when set to true they will be logged as debug instead
+# (so they won't show up in the logs unless you enable debug logging)
+disablePingWarnings = false
+
 [format]
-# heading of the entire message
-messageHeading = "<bold> >---< <color:#d28aff>Server Selector</color> >---< </bold>"
+    # heading of the entire message
+    messageHeading = "<bold> >---< <color:#d28aff>Server Selector</color> >---< </bold>"
 
-# heading used for groups of servers
-# placeholders:
-# <group> - replaced with the friendly group name
-groupHeading = " >-< <color:#fcd9ff><group></color> >-< "
+    # heading used for groups of servers
+    # placeholders:
+    # <group> - replaced with the friendly group name
+    groupHeading = " >-< <color:#fcd9ff><group></color> >-< "
 
-# used to surround the server
-# placeholders:
-# <server> - replaced with the friendly server name
-serverNameWrapper = "» <green><server></green>"
+    # used to surround the server
+    # placeholders:
+    # <server> - replaced with the friendly server name
+    serverNameWrapper = "» <green><server></green>"
 
-# same as serverNameWrapper, but used when the server cannot be reached
-# when an empty string the server will be excluded from the output
-# placeholders:
-# <server> - replaced with the friendly server name
-# <default> - the result of serverNameWrapper
-unavailableServerNameWrapper = "» <st><server></st>"
+    # same as serverNameWrapper, but used when the server cannot be reached
+    # when an empty string the server will be excluded from the output
+    # placeholders:
+    # <server> - replaced with the friendly server name
+    # <default> - the result of serverNameWrapper
+    unavailableServerNameWrapper = "» <st><server></st>"
 
-# wrapps the server the player is currently on
-# this is applied before the serverNameWrapper
-# placeholders:
-# <server> - name of server
-currentServer = "<u><server></u> "
+    # wrapps the server the player is currently on
+    # this is applied before the serverNameWrapper
+    # placeholders:
+    # <server> - name of server
+    currentServer = "<u><server></u> "
 
 
-# separator between servers
-# use `<newline>` for each server to be on its own line
-serverSeparator = "<newline>"
+    # separator between servers
+    # use `<newline>` for each server to be on its own line
+    serverSeparator = "<newline>"
 
-# text shown when hovering over an available server
-# placeholders:
-# <version> - minecraft version of the server
-# <connected-players> - number of currently connected players
-# <max-players> - maximum number of slots on the server
-serverHoverText = """\
-<color:#fcd9ff>Version</color> <version>
-<color:#fcd9ff>Connected Players:</color> <connected-players>/<max-players>
+    # text shown when hovering over an available server
+    # placeholders:
+    # <version> - minecraft version of the server
+    # <connected-players> - number of currently connected players
+    # <max-players> - maximum number of slots on the server
+    serverHoverText = """\
+    <color:#fcd9ff>Version</color> <version>
+    <color:#fcd9ff>Connected Players:</color> <connected-players>/<max-players>
 
-<green><i>Click to connect</i></green>"""
+    <green><i>Click to connect</i></green>"""
 
-# attempted to connect to a server that either does not exist, or the player is not allowed on
-serverAccessDenied = "<red>The requested server is not available or you are not permitted to access it.</red>"
+    # attempted to connect to a server that either does not exist, or the player is not allowed on
+    serverAccessDenied = "<red>The requested server is not available or you are not permitted to access it.</red>"
 
-# command can only be used by a player
-onlyPlayers = "<red>This (sub-) command can only be used by players"
+    # command can only be used by a player
+    onlyPlayers = "<red>This (sub-) command can only be used by players"
 
-# fallback incase a placeholder can't be resolved
-placeholderFallback = "?"
+    # fallback incase a placeholder can't be resolved
+    placeholderFallback = "?"
 
-# server groups
-# table fields format: `[groups.<group-id>]`
-# where `<group-id>` is an arbitrary lowercase alphanumeric string to identify a group
-# if the default group does not exist, it wil be created during execution as a fallback group
-# if a group has no members, it will not be shown in-game
-#
-# fields:
-# friendlyName (optional, default: the internal name) - MiniMessage formatted string for the group name
-# restricted (optional, default: false) - if a permission is required to be allowed to access the server, can be overridden by server restricted
-[groups.default]
-friendlyName = "Ungrouped"
+[groups]
+    # server groups
+    # table fields format: `[groups.<group-id>]`
+    # where `<group-id>` is an arbitrary lowercase alphanumeric string to identify a group
+    # if the default group does not exist, it wil be created during execution as a fallback group
+    # if a group has no members, it will not be shown in-game
+    #
+    # fields:
+    # friendlyName (optional, default: the internal name) - MiniMessage formatted string for the group name
+    # restricted (optional, default: false) - if a permission is required to be allowed to access the server, can be overridden by server restricted
+    [groups.default]
+        friendlyName = "Ungrouped"
 
-[groups.vanilla]
-friendlyName = "Vanilla"
+    [groups.vanilla]
+        friendlyName = "Vanilla"
 
-[groups.modded]
-friendlyName = "Mod Packs"
+    [groups.modded]
+        friendlyName = "Mod Packs"
 
-[groups.staff]
-friendlyName = "Staff Only"
-restricted = true
+    [groups.staff]
+        friendlyName = "Staff Only"
+        restricted = true
 
-# server configuration
-# table fields format: `[server.<server-id>]`
-# where `<server-id>` corresponds to the server identifier configured in the `velocity.toml`
-# if it does not correspond to a server identifier, it will appear in the server list but always show as unavailable
-#
-# fields:
-# friendlyName (optional, default: <server-id>) - MiniMessage formatted string for the server name
-# group (optional, default: "default") - corresponds to a group id specified in the groups section
-# restricted (optional, default: false) - if a permission is required to be allowed to access the server
-[servers.lobby]
-friendlyName = "Lobby"
+[servers]
+    # server configuration
+    # table fields format: `[server.<server-id>]`
+    # where `<server-id>` corresponds to the server identifier configured in the `velocity.toml`
+    # if it does not correspond to a server identifier, it will appear in the server list but always show as unavailable
+    #
+    # fields:
+    # friendlyName (optional, default: <server-id>) - MiniMessage formatted string for the server name
+    # group (optional, default: "default") - corresponds to a group id specified in the groups section
+    # restricted (optional, default: false) - if a permission is required to be allowed to access the server
+    [servers.lobby]
+        friendlyName = "Lobby"
 
-[servers.minigames]
-friendlyName = "Minigames"
-group = "default"
+    [servers.minigames]
+        friendlyName = "Minigames"
+        group = "default"
 
-[servers.survival01]
-friendlyName = "Vanilla Survival"
-group = "vanilla"
+    [servers.survival01]
+        friendlyName = "Vanilla Survival"
+        group = "vanilla"
 
-[servers.survival02]
-friendlyName = "Superflat Survival"
-group = "vanilla"
-restricted = true
+    [servers.survival02]
+        friendlyName = "Superflat Survival"
+        group = "vanilla"
+        restricted = true
 
-[servers.atm10]
-friendlyName = "All the Mods 10"
-group = "modded"
+    [servers.atm10]
+        friendlyName = "All the Mods 10"
+        group = "modded"
 
-[servers.skyfactory5]
-friendlyName = "SkyFactory 5"
-group = "modded"
+    [servers.skyfactory5]
+        friendlyName = "SkyFactory 5"
+        group = "modded"
 
-[servers.staff01]
-friendlyName = "Staff Survival"
-group = "staff"
+    [servers.staff01]
+        friendlyName = "Staff Survival"
+        group = "staff"
