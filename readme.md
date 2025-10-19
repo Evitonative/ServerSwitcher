@@ -28,5 +28,3 @@ A Velocity plugin that provides a **permission-based server switching system** f
 
 ## Config
 See the [config.toml](/src/main/resources/config.toml) file for available options.
-
-> **💡 Tip:** If you notice `CR` characters in-game, save it with **LF line terminators** to avoid issues.

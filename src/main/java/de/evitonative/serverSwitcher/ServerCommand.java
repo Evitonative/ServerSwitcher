@@ -340,7 +340,7 @@ public final class ServerCommand {
                 maxPlayers = players.getMax();
             }
 
-            Component content = mm.deserialize(plugin.config.format.serverHoverText,
+            Component content = mm.deserialize(plugin.config.format.serverHoverText.replaceAll("\\r\\n", "\n"),
                     Placeholder.parsed(
                             "version",
                             serverVersion.getName()
