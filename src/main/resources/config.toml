@@ -56,11 +56,7 @@ disablePingWarnings = false
     # <version> - minecraft version of the server
     # <connected-players> - number of currently connected players
     # <max-players> - maximum number of slots on the server
-    serverHoverText = """\
-    <color:#fcd9ff>Version</color> <version>
-    <color:#fcd9ff>Connected Players:</color> <connected-players>/<max-players>
-
-    <green><i>Click to connect</i></green>"""
+    serverHoverText = "<color:#fcd9ff>Version</color> <version><newline><color:#fcd9ff>Connected Players:</color> <connected-players>/<max-players><newline><green><i>Click to connect</i></green>"
 
     # attempted to connect to a server that either does not exist, or the player is not allowed on
     serverAccessDenied = "<red>The requested server is not available or you are not permitted to access it.</red>"
