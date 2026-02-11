@@ -201,7 +201,7 @@ public final class ServerCommand {
             plugin.logger.warn("Server {} missing in config", serverEntry.getKey());
 
             String serverName = serverEntry.getKey();
-            MainConfig.ServerDetails serverDetails = new MainConfig.ServerDetails(serverEntry.getKey(), "default", false);
+            MainConfig.ServerDetails serverDetails = new MainConfig.ServerDetails(serverEntry.getKey());
 
             // Permissions
             DisplayGroup configGroup = configGroups.get("default");
@@ -251,23 +251,25 @@ public final class ServerCommand {
     }
 
     private static boolean allowedOnServer(ServerSwitcher plugin, CommandSource source, RegisteredServer server, String serverName) {
-        DisplayGroup configGroup;
         MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
-        if (serverDetails != null) {
-            MainConfig.ServerGroup group = plugin.config.groups.get(serverDetails.group);
-            if (group != null) {
-                configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), Objects.requireNonNullElse(group.restricted, false), source.getPermissionValue("server.group." + serverDetails.group));
-            } else {
-                configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), false, source.getPermissionValue("server.group." + serverDetails.group));
-            }
-        } else {
-            serverDetails = new MainConfig.ServerDetails("", "default", false);
+        MainConfig.ServerGroup group;
+        String permissionKey = "server.group.default";
 
-            MainConfig.ServerGroup group = plugin.config.groups.get("default");
-            boolean restricted = group.restricted != null ? group.restricted : false;
-            configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), restricted, source.getPermissionValue("server.group.default"));
+        if (serverDetails != null) {
+            group = plugin.config.groups.get(serverDetails.group);
+            permissionKey = "server.group." + serverDetails.group;
+        } else {
+            serverDetails = new MainConfig.ServerDetails("");
+            group = plugin.config.groups.get("default");
         }
 
+        boolean restricted = false;
+        if (group != null) {
+            if (group.restricted != null) restricted = group.restricted;
+            if (group.permission != null) permissionKey = group.permission;
+        }
+
+        DisplayGroup configGroup = new DisplayGroup(Component.empty(), new ArrayList<>(), restricted, source.getPermissionValue(permissionKey));
         return allowedOnServer(source, configGroup, serverDetails, serverName);
     }
 
@@ -276,7 +278,9 @@ public final class ServerCommand {
         Boolean serverRestricted = serverDetails.restricted;
 
         Tristate groupPermission = configGroup.groupPermission;
-        Tristate serverPermission = source.getPermissionValue("serverswitcher.server." + serverName);
+
+        String permissionKey = Objects.requireNonNullElse(serverDetails.permission, "serverswitcher.server." + serverName);
+        Tristate serverPermission = source.getPermissionValue(permissionKey);
 
         if (serverPermission != Tristate.UNDEFINED) return serverPermission.asBoolean();
         if (groupPermission != Tristate.UNDEFINED) return groupPermission.asBoolean();

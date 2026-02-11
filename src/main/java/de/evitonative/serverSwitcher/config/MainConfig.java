@@ -66,23 +66,22 @@ public class MainConfig {
         public String friendlyName;
         public String group;
         public Boolean restricted;
+        public String permission;
 
         @SuppressWarnings("unused")
         public ServerDetails() {
         }
 
-        public ServerDetails(String friendlyName,
-                             String group,
-                             Boolean restricted
-        ) {
+        public ServerDetails(String friendlyName) {
             this.friendlyName = friendlyName;
-            this.group = group;
-            this.restricted = restricted;
+            this.group = "default";
+            this.restricted = false;
         }
     }
 
     public static class ServerGroup {
         public String friendlyName;
         public Boolean restricted;
+        public String permission;
     }
 }
