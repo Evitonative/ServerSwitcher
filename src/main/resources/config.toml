@@ -77,6 +77,9 @@ disablePingWarnings = false
     # fields:
     # friendlyName (optional, default: the internal name) - MiniMessage formatted string for the group name
     # restricted (optional, default: false) - if a permission is required to be allowed to access the server, can be overridden by server restricted
+    # permission (optional, default: null) - override the default serverswitcher.server.<group-id> permission
+    # permissionDeniedMessage (optional, default: null) - override the global serverAccessDenied message
+    # alwaysShow (optional, default: null) - always show all servers in the group, even if you don't have access
     [groups.default]
         friendlyName = "Ungrouped"
 
@@ -100,6 +103,9 @@ disablePingWarnings = false
     # friendlyName (optional, default: <server-id>) - MiniMessage formatted string for the server name
     # group (optional, default: "default") - corresponds to a group id specified in the groups section
     # restricted (optional, default: false) - if a permission is required to be allowed to access the server
+    # permission (optional, default: null) - override the default serverswitcher.server.<server-id> permission
+    # permissionDeniedMessage (optional, default: null) - override the group and global serverAccessDenied message
+    # alwaysShow (optional, default: null) - always show a server, even if you don't have access
     [servers.lobby]
         friendlyName = "Lobby"
 
@@ -115,6 +121,9 @@ disablePingWarnings = false
         friendlyName = "Superflat Survival"
         group = "vanilla"
         restricted = true
+        permission = "servers.donators"
+        permissionDeniedMessage = "<red>Only donators have access to this server.</red>"
+        alwaysShow = true
 
     [servers.atm10]
         friendlyName = "All the Mods 10"

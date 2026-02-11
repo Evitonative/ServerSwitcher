@@ -67,6 +67,8 @@ public class MainConfig {
         public String group;
         public Boolean restricted;
         public String permission;
+        public String permissionDeniedMessage;
+        public Boolean alwaysShow;
 
         @SuppressWarnings("unused")
         public ServerDetails() {
@@ -83,5 +85,7 @@ public class MainConfig {
         public String friendlyName;
         public Boolean restricted;
         public String permission;
+        public String permissionDeniedMessage;
+        public Boolean alwaysShow;
     }
 }
