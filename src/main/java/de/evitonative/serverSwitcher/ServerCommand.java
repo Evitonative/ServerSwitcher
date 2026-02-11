@@ -49,6 +49,7 @@ public final class ServerCommand {
                                 source.sendMessage(Component.text("Failed to reload config!").color(NamedTextColor.RED));
                                 return Command.SINGLE_SUCCESS;
                             }
+                            plugin.primePermissions();
                             source.sendMessage(Component.text("Config reloaded successfully!").color(NamedTextColor.GREEN));
                             return Command.SINGLE_SUCCESS;
                         })
