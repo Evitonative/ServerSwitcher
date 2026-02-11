@@ -77,7 +77,7 @@ disablePingWarnings = false
     # fields:
     # friendlyName (optional, default: the internal name) - MiniMessage formatted string for the group name
     # restricted (optional, default: false) - if a permission is required to be allowed to access the server, can be overridden by server restricted
-    # permission (optional, default: null) - override the default serverswitcher.server.<group-id> permission
+    # permission (optional, default: null) - override the default serverswitcher.group.<group-id> permission
     # permissionDeniedMessage (optional, default: null) - override the global serverAccessDenied message
     # alwaysShow (optional, default: null) - always show all servers in the group, even if you don't have access
     [groups.default]
