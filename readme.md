@@ -12,7 +12,8 @@ A Velocity plugin that provides a **permission-based server switching system** f
 - `/server <server-name>` - Switches the player to the selected server
 - `/server reload` - Reloads the plugin configuration file
 
-> **⚠️ Note:** because of the reload command, you cannot have a server named reload.
+> [!NOTE]  
+> Because of the reload command, you cannot have a server named reload.
 
 ## Permissions
 
@@ -23,8 +24,8 @@ A Velocity plugin that provides a **permission-based server switching system** f
 | `serverswitcher.server.<server-id>`   | Allows access to the server `<server-id>`                |
 | `serverswitcher.group.<group-id>`     | Allows access to all servers in the group `<group-id>`   |
 
-
-> **⚠️ Note:** This plugin **does not prevent a player from being on a server**; it only controls whether they can switch there themselves. If there are other ways to join a server, they may bypass this restriction. You might also want to prevent access to the Velocity server command by setting `velocity.command.server` to `false`.
+> [!WARNING]  
+> This plugin **does not prevent a player from being on a server**; it only controls whether they can switch there themselves. If there are other ways to join a server, they may bypass this restriction. You might also want to prevent access to the Velocity server command by setting `velocity.command.server` to `false`.
 
 ## Config
 See the [config.toml](/src/main/resources/config.toml) file for available options.
