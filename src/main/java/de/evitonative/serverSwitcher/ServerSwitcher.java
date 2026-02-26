@@ -60,7 +60,6 @@ public class ServerSwitcher {
     }
 
     public void primePermissions() {
-        logger.error("prime");
         CommandSource source = this.proxy.getConsoleCommandSource();
         this.config.groups.forEach((id, group) -> {
             String key = (group.permission != null) ? group.permission : "serverswitcher.group." + id;
