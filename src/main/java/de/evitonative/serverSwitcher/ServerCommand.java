@@ -63,6 +63,9 @@ public final class ServerCommand {
 
                             plugin.proxy.getAllServers().forEach(server -> {
                                 String internalName = server.getServerInfo().getName();
+
+                                if (!internalName.toLowerCase().startsWith(builder.getRemainingLowerCase())) return;
+
                                 MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
                                 Component prettyName = serverDetails != null ? mm.deserialize(serverDetails.friendlyName) : Component.text(internalName);
 
