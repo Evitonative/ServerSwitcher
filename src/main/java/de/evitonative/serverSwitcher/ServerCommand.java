@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 public final class ServerCommand {
     public static BrigadierCommand createServerCommand(final ServerSwitcher plugin) {
+        MiniMessage mm = MiniMessage.miniMessage();
         LiteralCommandNode<CommandSource> serverNode = BrigadierCommand.literalArgumentBuilder("server")
                 .requires(source -> Permissions.resolve(source, Permissions.SERVERS_LIST))
                 .executes(context -> {
@@ -59,19 +60,20 @@ public final class ServerCommand {
                 .then(BrigadierCommand.requiredArgumentBuilder("server-name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             CommandSource source = ctx.getSource();
-                            MiniMessage mm = MiniMessage.miniMessage();
 
                             plugin.proxy.getAllServers().forEach(server -> {
                                 String internalName = server.getServerInfo().getName();
 
                                 if (!internalName.toLowerCase().startsWith(builder.getRemainingLowerCase())) return;
 
-                                MainConfig.ServerDetails serverDetails = plugin.config.servers.get(server.getServerInfo().getName());
-                                Component prettyName = serverDetails != null ? mm.deserialize(serverDetails.friendlyName) : Component.text(internalName);
-
                                 AccessResult access = checkAccess(plugin, source, server, server.getServerInfo().getName());
                                 if (access.shouldShow()) {
-                                    builder.suggest(internalName, VelocityBrigadierMessage.tooltip(prettyName));
+                                    MainConfig.ServerDetails serverDetails = plugin.config.servers.get(internalName);
+                                    Component tooltip = serverDetails != null
+                                            ? mm.deserialize(serverDetails.friendlyName)
+                                            : Component.text(internalName);
+
+                                    builder.suggest(internalName, VelocityBrigadierMessage.tooltip(tooltip));
                                 }
                             });
 
@@ -80,8 +82,6 @@ public final class ServerCommand {
                         .executes(context -> {
                             CommandSource source = context.getSource();
                             String arg = context.getArgument("server-name", String.class);
-
-                            MiniMessage mm = MiniMessage.miniMessage();
 
                             if (!(source instanceof Player player)) {
                                 source.sendMessage(mm.deserialize(plugin.config.format.onlyPlayers));
